@@ -5,7 +5,7 @@ import json
 
 class AuthorHandler():
 
-    def __init__(self, author, ee):
+    def __init__(self, author, ee, proxies):
         
 
         self.author = author
@@ -70,6 +70,22 @@ class AuthorHandler():
                 except KeyError:
                     author_info['affiliation'] = ',' + i.select('.affiliation__item')[0].text.strip()
         self.info = author_info
+
+    def AAAIParser(self):
+        url = self.url
+        url = url.replace('http://', 'https://')
+        url = url + '/0'
+        url = url.replace('paper/view', 'rt/bio')
+        res = requests.get(url, headers=self.headers)
+        soup = BeautifulSoup(res.text, 'lxml')
+        author_info = {}
+        result = soup.findAll('em')
+        for i in result:
+            if i.text == self.author:
+                author_info['affiliation'] = i.parent.contents[3].strip()
+        self.info = author_info
+
+
 
     def SciencedirectParser(self):
         author_info = {}

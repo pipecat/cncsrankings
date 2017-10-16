@@ -1,1 +1,138 @@
-<!DOCTYPE html><html class="borderbox"><head><title>NJUPT Ranking</title><meta charset="utf-8"><meta meta name="viewport" content="width=device-width, initial-scale=1.0"><style type="text/css">@-webkit-keyframes lds-ripple{0%{top:90px;left:90px;width:0;height:0;opacity:1;}100%{top:15px;left:15px;width:150px;height:150px;opacity:0;}}@keyframes lds-ripple{0%{top:90px;left:90px;width:0;height:0;opacity:1;}100%{top:15px;left:15px;width:150px;height:150px;opacity:0;}}.lds-ripple{position:fixed;left:0;right:0;top:0;bottom:0;margin:auto;display:block;width:200px;z-app:1000;height:200px}.lds-ripple div{position:absolute;border-width:10px;border-style:solid;opacity:1;border-radius:50%;-webkit-animation:lds-ripple 1s cubic-bezier(0,0.2,0.8,1) infinite;animation:lds-ripple 1s cubic-bezier(0,0.2,0.8,1) infinite}.lds-ripple div:nth-child(1){border-color:#333333}.lds-ripple div:nth-child(2){border-color:#333333;-webkit-animation-delay:-0.5s;animation-delay:-0.5s}</style><link id="css" rel="stylesheet" type="text/css"></head><body> <!--[if IE]><div>你的浏览器实在<strong>太太太太太太旧了</strong>，放学别走，升级完浏览器再说 <a target="_blank" href="http://browsehappy.com">立即升级</a></div><![endif]--><div class="lds-ripple" id="lds"><div style="-moz-box-sizing:content-box;-webkit-box-sizing:content-box;box-sizing:content-box;"></div><div style="-moz-box-sizing:content-box;-webkit-box-sizing:content-box;box-sizing:content-box;"></div></div><div id="root"></div><script id="js" type="text/javascript"></script><script>var cssok=false,jsok=false,cssLink="{{ url_for('static',filename='css/app.b0f1890a.css') }}",jsLink="{{ url_for('static', filename='js/app.b0f1890a.js') }}",cssDOM=document.getElementById("css"),jsDOM=document.getElementById("js"),ldsDOM=document.getElementById("lds");cssDOM.href=cssLink;jsDOM.src=jsLink;cssDOM.onload=function(){cssok=true;if(cssok&&jsok){ldsDOM.remove();cssDOM.href=cssLink;jsDOM.src=jsLink}};jsDOM.onload=function(){jsok=true;if(cssok&&jsok){ldsDOM.remove();cssDOM.href=cssLink;jsDOM.src=jsLink}};</script></body></html>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>NJUPT Ranking</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style type="text/css">
+    #lds {
+      position: fixed;
+      z-index: 10000;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+    }
+
+    .roataqx-loader {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      perspective: 800px;
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      margin: auto;
+    }
+
+    .roataqx-loader>div {
+      position: absolute;
+      box-sizing: border-box;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    .roataqx-loader .one {
+      left: 0%;
+      top: 0%;
+      animation: rotate-one 1s linear infinite;
+      border-bottom: 3px solid #000;
+    }
+
+    .roataqx-loader .two {
+      right: 0%;
+      top: 0%;
+      animation: rotate-two 1s linear infinite;
+      border-right: 3px solid #000;
+    }
+
+    .roataqx-loader .three {
+      right: 0%;
+      bottom: 0%;
+      animation: rotate-three 1s linear infinite;
+      border-top: 3px solid #000;
+    }
+
+    @keyframes rotate-one {
+      0% {
+        transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg);
+      }
+      100% {
+        transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg);
+      }
+    }
+
+    @keyframes rotate-two {
+      0% {
+        transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg);
+      }
+      100% {
+        transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg);
+      }
+    }
+
+    @keyframes rotate-three {
+      0% {
+        transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg);
+      }
+      100% {
+        transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg);
+      }
+    }
+  </style>
+  <link id="css" rel="stylesheet">
+</head>
+
+<body>
+  <!--[if lte IE 9]>
+    <div data-show="true" class="ant-alert ant-alert-error ant-alert-with-description">
+      <i class="anticon anticon-cross-circle-o ant-alert-icon"></i>
+      <span class="ant-alert-message">十分抱歉，页面无法很好显示</span>
+      <span class="ant-alert-description">
+        <span>因为您的浏览器实在太旧了，使用过于老旧的浏览器存在巨大风险，同时因为无法适应新的内容，您无法体验很多有趣的内容。</span>
+        <div>
+          <span>我们建议您：</span>
+          <a target="_blank" href="https://browsehappy.com/">立即升级</a>
+        </div>
+      </span>
+    </div>
+  <![endif]-->
+  <div id="lds">
+    <div class="roataqx-loader">
+      <div class="one"></div>
+      <div class="two"></div>
+      <div class="three"></div>
+    </div>
+  </div>
+  <div id="root"></div>
+  <script id="js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var cssok = false,
+      jsok = false,
+      cssLink = "{{ url_for('static',filename='css/app.01d168ab.css') }}",
+      jsLink = "{{ url_for('static', filename='js/app.01d168ab.js') }}",
+      cssDOM = document.getElementById("css"),
+      jsDOM = document.getElementById("js"),
+      ldsDOM = document.getElementById("lds");
+    cssDOM.href = cssLink;
+    jsDOM.src = jsLink;
+    cssDOM.onload = function () {
+      cssok = true;
+      if (cssok && jsok) {
+        ldsDOM.style.display = 'none'
+      }
+    };
+    jsDOM.onload = function () {
+      jsok = true;
+      if (cssok && jsok) {
+        ldsDOM.style.display = 'none'
+      }
+    };
+  </script>
+</body>
+
+</html>

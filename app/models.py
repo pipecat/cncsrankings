@@ -1,6 +1,8 @@
 #-*- coding:utf-8 -*-
 import hashlib
 import requests
+import json
+import random
 from time import sleep
 from flask import current_app, request, url_for
 from xml_parser import parse_xml
@@ -94,12 +96,24 @@ class Work(db.Model):
 	@staticmethod
 	def generate_matched():
 		works = Work.query.all()
+
+		with open('app/proxy.json', 'r') as f:
+			data = json.loads(f.read())
+		data = data['result']
+		index = random.randint(1,len(data))
+		proxy = data[index]['ip:port']
+		proxies = {
+			'http':proxy
+		}
+		print proxy
+
+
 		for work in works:
-			if not work.matched and works.index(work) > 10000:
-				if 'acm' in work.real_url or 'ieee' in work.real_url:
+			if not work.matched and works.index(work) > 10781:
+				if 'acm' in work.real_url or 'ieee' in work.real_url or 'aaai' in work.real_url:
 					print works.index(work), ' '
 					print work.real_url
-					handler = AuthorHandler(work.alias, work.real_url)
+					handler = AuthorHandler(work.alias, work.real_url, proxies)
 					handler.parse_self()
 					try:
 						affiliation = handler.info['affiliation'].lower()
@@ -119,7 +133,7 @@ class Work(db.Model):
 							db.session.add(work)
 							db.session.commit()
 							break
-					sleep(2)
+					sleep(3)
 		
 
 
