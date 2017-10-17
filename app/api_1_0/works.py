@@ -8,7 +8,12 @@ from .. import db, cache
 def get_works():
     page = request.args.get('page', 1, type=int)
     pagination = Work.query.paginate(page, per_page=current_app.config['CSRANKINGS_WORKS_PER_PAGE'], error_out=False)
-    posts = pagination.items
+
+    all_posts = pagination.items
+    posts = []
+    for post in all_posts:
+        if post.matched:
+            posts.append(post)
 
     prev = None
     if pagination.has_prev:
