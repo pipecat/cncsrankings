@@ -74,24 +74,24 @@ class Work(db.Model):
 		headers = {
 			'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36'
 		}
-		error_index = [673, 989, 1436, 1927, 2161, 2190,2638, 3023, 3026, 3033, 3665, 3880, 4430, 5340 ,6691, 9605, 9613, 2141, 9898, 9942, 10074, 10182, 10626, 10627, 10628, 10629, 10820, 10927, 11131, 11189, 11190, 11598, 11649, 11758]
 		for work in works:
-			if works.index(work) > 11500:
+			if works.index(work) > 12138:
 				print works.index(work), ' '
-				if works.index(work) in error_index:
-					continue
 				if work.real_url == '' and work.ee != '':
-					res = requests.get(work.ee, headers = headers, timeout=5)
-					if res.status_code == 200:
-						work.real_url = res.url
-						print work.id, 'success', work.real_url
-						#sleep(3)
-					else:
-						print work.id, 'error  ', res.status_code
+					try:
+						res = requests.get(work.ee, headers = headers, timeout=5)
+						if res.status_code == 200:
+							work.real_url = res.url
+							print work.id, 'success', work.real_url
+							#sleep(3)
+						else:
+							print work.id, 'error  ', res.status_code
+					except:
+						pass
 				else:
 					print work.real_url
 				db.session.add(work)
-		db.session.commit()
+				db.session.commit()
 
 	@staticmethod
 	def generate_matched():
@@ -109,7 +109,7 @@ class Work(db.Model):
 
 
 		for work in works:
-			if not work.matched and works.index(work) > 10781:
+			if not work.matched and works.index(work) > 14078:
 				if 'acm' in work.real_url or 'ieee' in work.real_url or 'aaai' in work.real_url:
 					print works.index(work), ' '
 					print work.real_url

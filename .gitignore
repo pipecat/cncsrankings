@@ -1,3 +1,4 @@
 *.pyc
 venv/
-
+dblp.xml
+dblp.dtd

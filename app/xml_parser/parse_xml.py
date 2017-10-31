@@ -61,10 +61,22 @@ class WorkHandler(ContentHandler):
             self.work['author'] = set()
             self.work['ee'] = ''
             self.work['booktitle'] = ''
+        if name == 'article':
+            self.work = {}
+            self.work['key'] = attrs.get('key')
+            self.work['type'] = name
+            self.work['author'] = set()
+            self.work['ee'] = ''
+            self.work['booktitle'] = ''
+            key = attrs.get('key')
+            
+            if 'journals' in key:
+                self.is_required = True
+                print self.work['key']
 
     def endElement(self, name):
         self.in_queto = False
-        if name == 'inproceedings':
+        if name == 'inproceedings' or name == 'article':
             if self.is_required and check_workinfo(self.work):
                 _aliases = list(self.work['author'].intersection(aliases))
                 _key = self.work['key']
@@ -72,7 +84,10 @@ class WorkHandler(ContentHandler):
                 _title = self.work['title']
                 _year = self.work['year']
                 _ee = self.work['ee']
-                _booktitle = self.work['booktitle']
+                try:
+                    _booktitle = self.work['booktitle']
+                except:
+                    _booktitle = ''
                 _adjustedcount = 1.0 / len(self.work['author'])
                 for _alias in _aliases:
                     _institute = find_institute(_alias)
@@ -124,16 +139,16 @@ def insert_work(_key, _alias, _type, _title, _year, _institute, _adjustedcount, 
            )
         db.session.add(work)
     else:
-       w.year = _year
-       w.alias = _alias
-       w.type = _type
-       w.title = _title
-       w.institute = _institute
-       w.adjusted_count = _adjustedcount
-       w.ee = _ee
-       w.booktitle = _booktitle
-       w.keyword = _keyword
-       db.session.add(w)
+        w.year = _year
+        w.alias = _alias
+        w.type = _type
+        w.title = _title
+        w.institute = _institute
+        w.adjusted_count = _adjustedcount
+        w.ee = _ee
+        w.booktitle = _booktitle
+        w.keyword = _keyword
+        db.session.add(w)
     db.session.commit()
     # 输出结果
     print '|alias:         | ' + _alias 
