@@ -72,7 +72,7 @@ class WorkHandler(ContentHandler):
             
             if 'journals' in key:
                 self.is_required = True
-                print self.work['key']
+                #print self.work['key']
 
     def endElement(self, name):
         self.in_queto = False
@@ -151,6 +151,7 @@ def insert_work(_key, _alias, _type, _title, _year, _institute, _adjustedcount, 
         db.session.add(w)
     db.session.commit()
     # 输出结果
+    '''
     print '|alias:         | ' + _alias 
     print '|type:          | ' + _type 
     print '|title:         | ' + _title 
@@ -160,7 +161,7 @@ def insert_work(_key, _alias, _type, _title, _year, _institute, _adjustedcount, 
     print '|ee:            | ' + _ee
     print '|booktitle:     | ' + _booktitle
     print '---'
-
+    '''
 
 def parse_xml():
     print 'parsing xml document...'
@@ -169,6 +170,7 @@ def parse_xml():
     Handler = WorkHandler()
     parser.setContentHandler(Handler)
     parser.parse('dblp.xml')
+    print 'finish parsing...'
 
 
 

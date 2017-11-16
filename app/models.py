@@ -1,12 +1,15 @@
 #-*- coding:utf-8 -*-
 import hashlib
 import requests
+import grequests
 import json
 import random
+import time
+from itertools import islice
 from time import sleep
 from flask import current_app, request, url_for
 from xml_parser import parse_xml
-from .spider import AuthorHandler
+from .spider import AuthorHandler, No_Request_AuthorHandler
 from . import db
 
 
@@ -83,15 +86,84 @@ class Work(db.Model):
 						if res.status_code == 200:
 							work.real_url = res.url
 							print work.id, 'success', work.real_url
-							#sleep(3)
+							#sleep(2)
 						else:
 							print work.id, 'error  ', res.status_code
+						db.session.add(work)
+						db.session.commit()
 					except:
 						pass
 				else:
 					print work.real_url
-				db.session.add(work)
-				db.session.commit()
+
+
+	@staticmethod
+	def async_generate_matched():
+		works = Work.query.all()
+		works_iter = islice(works, 40000, None)
+		while True:
+			try:
+				temp_works = []
+				reqs = []
+				for i in range(1,100):
+					itering_work = next(works_iter)
+					temp_works.append(itering_work)
+					reqs.append(grequests.get(itering_work.ee, timeout=40))
+				print 'Try to make works {}-{}...'.format(temp_works[0].id, temp_works[-1].id)
+				start = time.time()
+				results = grequests.map(reqs)
+				end = time.time()
+				print 'Requested works {}-{}, costed {}s.'.format(temp_works[0].id, temp_works[-1].id, end-start)
+				length = len(reqs)
+				#Lost remake
+				for i in range(length):
+					if results[i] is None:
+						'''
+						try:
+							results[i] = request.get(temp_works[i].ee, timeout=10)
+						except:
+							pass
+						'''
+						print 'Work:{} losted, ee:'.format(temp_works[i].id, temp_works[i].ee)
+						#print results[i].status_code, results[i].url
+				#Start parse
+				for i in range(length):
+					if temp_works[i] is None:
+						continue
+					if results[i] is None:
+						continue
+					handler = No_Request_AuthorHandler(temp_works[i], results[i])
+					id = temp_works[i].id 
+					work = Work.query.filter_by(id=id).first()
+					print work.id, work.alias, handler.res.url
+					db.session.add(work)
+					if not work.matched and work.id > 14078:
+						handler.parse_self()
+						work.real_url = handler.res.url
+						try:
+							affiliation = handler.info['affiliation'].lower()
+						except:
+							continue
+						keywords_list = work.keyword.split('/')
+						for keywords in keywords_list:
+							temp = 1
+							keywords = keywords.split(':')
+							for keyword in keywords:
+								if keyword not in affiliation:
+									temp = 0
+							if temp == 1:
+								work.matched = True
+								print '-----------success!!!!!!!!------------'
+								print keywords, affiliation, work.matched
+								db.session.add(work)
+								break
+				print 'Requested works {}-{}, costed {}s.'.format(temp_works[0].id, temp_works[-1].id, end-start)
+
+
+			except StopIteration:
+				print 'End'
+				break
+			db.session.commit()
 
 	@staticmethod
 	def generate_matched():
