@@ -8,6 +8,7 @@ class Config:
 	CSRANKINGS_WORKS_PER_PAGE = 2000000
 	SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 	SQLALCHEMY_TRACK_MODIFICATIONS = True
+	USE_X_SENDFILE = False
 
 	@staticmethod
 	def init_app(app):

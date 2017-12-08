@@ -8,8 +8,8 @@ import time
 from itertools import islice
 from time import sleep
 from flask import current_app, request, url_for
-from xml_parser import parse_xml
-from .spider import AuthorHandler, No_Request_AuthorHandler
+from xml_parser import parse_xml, new_xml_parser
+from .spider import AuthorHandler, No_Request_AuthorHandler, USER_AGENTS
 from . import db
 
 
@@ -18,7 +18,7 @@ class Work(db.Model):
 	__tablename__ = 'works'
 	id = db.Column(db.Integer, primary_key=True)
 	year = db.Column(db.Integer)
-	key = db.Column(db.String(128), unique=True, index=True)
+	key = db.Column(db.String(128), index=True)
 	alias = db.Column(db.String(128))
 	type = db.Column(db.String(128))
 	title = db.Column(db.String(128))
@@ -99,36 +99,40 @@ class Work(db.Model):
 
 	@staticmethod
 	def async_generate_matched():
+		'''headers = {
+			'User-Agent': 'Mozilla/5.0 (Linux; Android 4.3; Nexus 7 Build/JSS15Q) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+		}
+		'''
+
 		works = Work.query.all()
-		works_iter = islice(works, 40000, None)
+		works_iter = islice(works, 170000, None)
 		while True:
 			try:
 				temp_works = []
 				reqs = []
-				for i in range(1,100):
+				for i in range(0,100):
 					itering_work = next(works_iter)
 					temp_works.append(itering_work)
-					reqs.append(grequests.get(itering_work.ee, timeout=40))
+					reqs.append(grequests.get(itering_work.ee, timeout=20, headers={'User-Agent':random.choice(USER_AGENTS)}))
 				print 'Try to make works {}-{}...'.format(temp_works[0].id, temp_works[-1].id)
 				start = time.time()
 				results = grequests.map(reqs)
-				end = time.time()
-				print 'Requested works {}-{}, costed {}s.'.format(temp_works[0].id, temp_works[-1].id, end-start)
 				length = len(reqs)
 				#Lost remake
 				for i in range(length):
-					if results[i] is None:
-						'''
+					if results[i] is None or results[i].status_code != 200:
+						
 						try:
-							results[i] = request.get(temp_works[i].ee, timeout=10)
+							results[i] = request.get(temp_works[i].ee, headers={'User-Agent':random.choice(USER_AGENTS)}, timeout=5)
 						except:
-							pass
-						'''
-						print 'Work:{} losted, ee:'.format(temp_works[i].id, temp_works[i].ee)
+								pass
+						
+						print 'Work:{} losted, ee:{}'.format(temp_works[i].id, temp_works[i].ee)
 						#print results[i].status_code, results[i].url
 				#Start parse
+				end = time.time()
 				for i in range(length):
-					if temp_works[i] is None:
+					if temp_works[i] is None or (temp_works[i].real_url != '' and 'jsyd' not in temp_works[i].real_url):
 						continue
 					if results[i] is None:
 						continue
@@ -139,6 +143,85 @@ class Work(db.Model):
 					db.session.add(work)
 					if not work.matched and work.id > 14078:
 						handler.parse_self()
+						work.real_url = handler.res.url
+						try:
+							affiliation = handler.info['affiliation'].lower()
+						except:
+							continue
+						keywords_list = work.keyword.split('/')
+						for keywords in keywords_list:
+							temp = 1
+							keywords = keywords.split(':')
+							for keyword in keywords:
+								if keyword not in affiliation:
+									temp = 0
+							if temp == 1:
+								work.matched = True
+								print '-----------success!!!!!!!!------------'
+								print keywords, affiliation, work.matched
+								db.session.add(work)
+								break
+				print 'Requested works {}-{}, costed {}s.'.format(temp_works[0].id, temp_works[-1].id, end-start)
+
+
+			except StopIteration:
+				print 'End'
+				break
+			db.session.commit()
+
+	@staticmethod
+	def async_generate_acm():
+		'''headers = {
+			'User-Agent': 'Mozilla/5.0 (Linux; Android 4.3; Nexus 7 Build/JSS15Q) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+		}
+		'''
+
+		works = Work.query.all()
+		acm_works = []
+		for work in works:
+			if 'acm' in work.ee:
+				acm_works.append(Work.query.filter_by(id=work.id).first())
+		works_iter = islice(acm_works, 0, None)
+		while True:
+			try:
+				temp_works = []
+				reqs = []
+				for i in range(0,100):
+					itering_work = next(works_iter)
+					temp_works.append(itering_work)
+					reqs.append(grequests.get(itering_work.ee, timeout=20, headers={'User-Agent':random.choice(USER_AGENTS)}))
+				print 'Try to make works {}-{}...'.format(temp_works[0].id, temp_works[-1].id)
+				start = time.time()
+				results = grequests.map(reqs)
+				length = len(reqs)
+				#Lost remake
+				for i in range(length):
+					if results[i] is None or results[i].status_code != 200:
+						
+						try:
+							results[i] = request.get(temp_works[i].ee, headers={'User-Agent':random.choice(USER_AGENTS)}, timeout=5)
+						except:
+								pass
+						try:
+							print 'Work:{} losted, status:{}, ee:{}'.format(temp_works[i].id,results[i].status_code, temp_works[i].ee)
+						except AttributeError:
+							print 'Work:{} losted, status:None, ee:{}'.format(temp_works[i].id, temp_works[i].ee)
+						#print results[i].status_code, results[i].url
+				#Start parse
+				end = time.time()
+				for i in range(length):
+					if temp_works[i] is None or (temp_works[i].real_url != '' and 'jsyd' not in temp_works[i].real_url):
+						continue
+					if results[i] is None:
+						continue
+					handler = No_Request_AuthorHandler(temp_works[i], results[i])
+					id = temp_works[i].id 
+					work = Work.query.filter_by(id=id).first()
+					print work.id, work.alias, handler.res.url
+					db.session.add(work)
+					if not work.matched and work.id > 14078:
+						handler.parse_self()
+						print handler.info
 						work.real_url = handler.res.url
 						try:
 							affiliation = handler.info['affiliation'].lower()
@@ -206,7 +289,118 @@ class Work(db.Model):
 							db.session.commit()
 							break
 					sleep(3)
-		
+
+	@staticmethod
+	def generate_matched_acm():
+		works = Work.query.all()
+		acm_works = []
+		for work in works:
+			if 'acm' in work.ee:
+				acm_works.append(Work.query.filter_by(id=work.id).first())
+
+
+		for work in acm_works:
+			if not work.matched and works.index(work) > 0:
+				#if 'acm' in work.real_url or 'ieee' in work.real_url or 'aaai' in work.real_url:
+				print works.index(work), ' '
+				print work.real_url
+				handler = AuthorHandler(work.alias, work.ee)
+				handler.parse_self()
+				try:
+					affiliation = handler.info['affiliation'].lower()
+				except:
+					continue
+				keywords_list = work.keyword.split('/')
+				for keywords in keywords_list:
+					temp = 1
+					keywords = keywords.split(':')
+					for keyword in keywords:
+						if keyword not in affiliation:
+							temp = 0
+					if temp == 1:
+						work.matched = True
+						print '-----------success!!!!!!!!------------'
+						print keywords, affiliation, work.matched
+						db.session.add(work)
+						db.session.commit()
+						break
+	@staticmethod
+	def generate_matched_TaoLi():
+		works = Work.query.all()
+		TaoLi_works = []
+		for work in works:
+			if 'Tao Li' in work.alias:
+				TaoLi_works.append(Work.query.filter_by(id=work.id).first())
+
+
+		for work in TaoLi_works:
+			if not work.matched and works.index(work) > 0:
+				#if 'acm' in work.real_url or 'ieee' in work.real_url or 'aaai' in work.real_url:
+				print works.index(work), ' '
+				handler = AuthorHandler(work.alias, work.ee)
+				handler.parse_self()
+				try:
+					work.real_url = handler.res.url
+					print handler.res.url
+				except:
+					print 'no ee...'
+					continue
+				try:
+					affiliation = handler.info['affiliation'].lower()
+				except:
+					continue
+				keywords_list = work.keyword.split('/')
+				for keywords in keywords_list:
+					temp = 1
+					keywords = keywords.split(':')
+					for keyword in keywords:
+						if keyword not in affiliation:
+							temp = 0
+					if temp == 1:
+						work.matched = True
+						print '-----------success!!!!!!!!------------'
+						print keywords, affiliation, work.matched
+						db.session.add(work)
+						db.session.commit()
+						break
+	@staticmethod
+	def generate_taoli0001():
+		new_xml_parser.parse_xml()
+		generate_matched_TaoLi()
+				
+
+
+	@staticmethod
+	def generate_json():
+		works = Work.query.all()
+		result = {}
+		result['prev'] = None
+		result['next'] = None
+		posts = []
+		with open('app/filters.json', 'r') as f:
+			filters = json.loads(f.read())
+
+		for work in works:
+			keys = work.key.split('/')
+			filter = keys[0] + '/' + keys[1]
+			if work.matched and filter in filters:
+				posts.append({
+						'id': work.id,
+						'title': work.title,
+						'author': work.alias,
+						'institue': work.institute,
+						'key': work.key,
+						'type': work.type,
+						'year': work.year,
+						'adjusted_count': work.adjusted_count,
+						'booktitle': work.booktitle,
+						'ee': work.ee,
+						'matched': work.matched
+					})
+		result['posts'] = posts
+		result['count'] = len(posts)
+		with open('app/static/works.json', 'w') as f:
+			f.write(json.dumps(result))
 
 
 
